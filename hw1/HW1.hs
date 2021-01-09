@@ -47,7 +47,7 @@ ts = [t1,t2,t3,t4,t5,t6]
 --
 leftmost :: Tree -> Int
 leftmost (Leaf v) = v
-leftmost (Node v l r) = leftmost l
+leftmost (Node _ l _) = leftmost l
 
 
 -- | The integer at the right-most node of a binary tree.
@@ -63,7 +63,7 @@ leftmost (Node v l r) = leftmost l
 --
 rightmost :: Tree -> Int
 rightmost (Leaf v) = v
-rightmost (Node v l r) = rightmost r
+rightmost (Node _ _ r) = rightmost r
 
 
 -- | Get the maximum integer from a binary tree.
@@ -80,7 +80,12 @@ rightmost (Node v l r) = rightmost r
 --   >>> map maxInt ts
 --   [9,9,5,5,5,5]
 --
-maxInt = undefined
+maxInt :: Tree -> Int
+maxInt (Leaf v) = v
+maxInt (Node v l r)
+  | v >= maxInt l && v >= maxInt r        = v
+  | maxInt l >= v && maxInt l >= maxInt r = maxInt l
+  | maxInt r >= v && maxInt r >= maxInt l = maxInt r
 
 
 -- | Get the minimum integer from a binary tree.
@@ -97,7 +102,12 @@ maxInt = undefined
 --   >>> map minInt ts
 --   [1,1,1,1,1,1]
 --
-minInt = undefined
+minInt :: Tree -> Int
+minInt (Leaf v) = v
+minInt (Node v l r)
+  | v <= minInt l && v <= minInt r        = v
+  | minInt l <= v && minInt l <= minInt r = minInt l
+  | minInt r <= v && minInt r <= minInt l = minInt r
 
 
 -- | Get the sum of the integers in a binary tree.
@@ -114,7 +124,9 @@ minInt = undefined
 --   >>> map sumInts ts
 --   [45,45,15,15,15,15]
 --
-sumInts = undefined
+sumInts :: Tree -> Int
+sumInts (Leaf v) = v
+sumInts (Node v l r) = v + sumInts l + sumInts r
 
 
 -- | The list of integers encountered by a pre-order traversal of the tree.
@@ -134,7 +146,9 @@ sumInts = undefined
 --   >>> map preorder [t3,t4,t5,t6]
 --   [[3,2,1,4,5],[3,1,4,2,5],[4,2,3,1,5],[2,1,4,5,3]]
 --   
-preorder = undefined
+preorder :: Tree -> [Int]
+preorder (Leaf v) = v : []
+preorder (Node v l r) = concat ([v] : preorder l : preorder r : [])
 
 
 -- | The list of integers encountered by an in-order traversal of the tree.
@@ -154,7 +168,9 @@ preorder = undefined
 --   >>> map inorder [t3,t4,t5,t6]
 --   [[1,2,4,3,5],[1,3,2,4,5],[3,2,1,4,5],[1,2,5,4,3]]
 --   
-inorder = undefined
+inorder :: Tree -> [Int]
+inorder (Leaf v) = v : []
+inorder (Node v l r) = concat (inorder l : [v] : inorder r : [])
 
 
 -- | Check whether a binary tree is a binary search tree.
@@ -168,7 +184,11 @@ inorder = undefined
 --   >>> map isBST ts
 --   [False,True,False,False,False,False]
 --   
-isBST = undefined
+isBST :: Tree -> Bool
+isBST (Leaf _) = True
+isBST (Node v l r)
+  | v >= maxInt l && v <= maxInt r && maxInt l <= v && v <= minInt r && isBST l && isBST r = True
+  | otherwise                                                                              = False
 
 
 -- | Check whether a number is contained in a binary search tree.
@@ -196,4 +216,9 @@ isBST = undefined
 --   >>> inBST 2 t4
 --   False
 --   
-inBST = undefined
+inBST :: Int -> Tree -> Bool
+inBST k (Leaf v) = k == v
+inBST k (Node v l r)
+  | k == v = True
+  | k < v  = inBST k l
+  | k > v  = inBST k r
