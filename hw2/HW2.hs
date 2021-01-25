@@ -1,6 +1,9 @@
 -- Grading note: 10pts total
 --  * 2pts each for encodeList and mapTree
 --  * 3pts each for valueAt and pathTo
+
+-- I collaborated with Samuel Somatis (ID: 933339006) on pathTo, but did everything else on my own
+
 module HW2 where
 
 -- | Binary trees with nodes labeled by values of an arbitrary type.
@@ -41,7 +44,9 @@ ex = Node 4 (Node 3 (leaf 2) End)
 --   >>> encodeList ":-D"
 --   Node ':' End (Node '-' End (Node 'D' End End))
 --
-encodeList = undefined
+encodeList :: [a] -> Tree a
+encodeList []    = End
+encodeList (h:t) = Node h End (encodeList t)
 
 
 -- | Map a function over a tree. Applies the given function to every label
@@ -62,7 +67,9 @@ encodeList = undefined
 --   >>> ex == (mapTree (subtract 27) . mapTree (+27)) ex
 --   True
 --
-mapTree = undefined
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree _ (End)        = End
+mapTree f (Node v l r) = Node (f v) (mapTree f l) (mapTree f r)
 
 
 -- | Get the value at the node specified by a path. Returns 'Nothing' if
@@ -83,7 +90,12 @@ mapTree = undefined
 --   >>> valueAt [L,L,L] ex
 --   Nothing
 --
-valueAt = undefined
+valueAt :: Path -> Tree a -> Maybe a
+valueAt [] (End)        = Nothing
+valueAt [] (Node v _ _) = Just v
+valueAt (h:t) (Node _ l r)
+  | h == L = valueAt t l
+  | h == R = valueAt t r
 
 
 -- | Find a path to a node that contains the given value.
@@ -104,4 +116,11 @@ valueAt = undefined
 --   Nothing
 --
 pathTo :: Eq a => a -> Tree a -> Maybe Path
-pathTo = undefined
+pathTo _ End = Nothing
+pathTo k (Node v l r)
+  | k == v    = Just []
+  | otherwise = case pathTo k l of
+                  Just p  -> Just (L : p)
+                  Nothing -> case pathTo k r of
+                               Just p  -> Just (R : p)
+                               Nothing -> Nothing

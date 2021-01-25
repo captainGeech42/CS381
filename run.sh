@@ -5,4 +5,4 @@ if [[ "$#" -ne 1 ]]; then
 	exit 1
 fi
 
-docker run -v $(pwd)/$1:/$1 -it cs381 /bin/bash
+docker run --rm -v $(pwd)/$1:/$1 -it cs381 /bin/bash
