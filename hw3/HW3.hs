@@ -1,7 +1,5 @@
 -- Group members:
 --  * Alexander Nead-Work (me), 933190259
---  * Name, ID
---  * Name, ID
 --
 -- Grading note: 15pts total
 --  * 2pts Expr data type
@@ -39,7 +37,7 @@ data Expr
 
 -- | 2 + 3 * x
 expr1 :: Expr
-expr1 = Add (Add (Lit 2) (Lit 3)) (Ref "x")
+expr1 = Mul (Add (Lit 2) (Lit 3)) (Ref "x")
 
 -- | 2 + 3 * x + 4
 expr2 :: Expr
@@ -99,7 +97,10 @@ data Mode = Down | Up
 
 -- | Commands.
 data Cmd
-   = CmdTODO  -- This is a dummy constructor that should be removed!
+   = Pen Mode
+   | Move Expr Expr
+   | Call Macro Args
+   | For Var Expr Expr Block
   deriving (Eq,Show)
 
 
@@ -119,7 +120,14 @@ data Cmd
 --   }
 --
 boxBody :: Block
-boxBody = undefined
+boxBody = 
+    [ Pen Up
+    , Move (Ref "x") (Ref "y")
+    , Pen Down
+    , Move (Add (Ref "x") (Ref "w")) (Ref "y")
+    , Move (Add (Ref "x") (Ref "w")) (Add (Ref "y") (Ref "h"))
+    , Move (Ref "x") (Add (Ref "y") (Ref "h"))
+    , Move (Ref "x") (Ref "y") ]
 
 
 -- | The body of the main macro.
@@ -131,7 +139,14 @@ boxBody = undefined
 --     }
 --   }
 mainBody :: Block
-mainBody = undefined
+mainBody =
+    [ For "i" (Lit 1) (Lit 15)
+        [ Call "box" [Ref "i", Ref "i", Ref "i", Ref "i"]
+        ]
+    ]
+
+
+
 
 
 -- ** Pretty printer
@@ -178,7 +193,10 @@ prettyMode Up   = "up"
 --   "for i = 1 to 10 {}"
 --
 prettyCmd :: Cmd -> String
-prettyCmd = undefined
+prettyCmd (Pen m) = "pen " ++ prettyMode m
+prettyCmd (Move x y) = "move(" ++ prettyExpr x ++ ", " ++ prettyExpr y ++ ")"
+prettyCmd (Call m a) = m ++ "(" ++ ((intercalate ", " . map prettyExpr) a) ++ ")"
+prettyCmd (For v l h b) = "for " ++ v ++ " = " ++ prettyExpr l ++ " to " ++ prettyExpr h ++ " " ++ prettyBlock b
 
 
 -- | Pretty print a block of commands.
@@ -237,8 +255,9 @@ data Prog = Program [Def] Block
 --   }
 --
 boxes :: Prog
-boxes = undefined
-
+boxes = Program
+    [ Define "box" [ "x", "y", "w", "h" ] boxBody ]
+    mainBody
 
 -- | Pretty print a macro definition.
 prettyDef :: Def -> String
