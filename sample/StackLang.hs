@@ -82,19 +82,44 @@ genSum (i:is) = genSum is ++ [PushI i, Add]
 
 
 --
--- * Semantics of StackLang (later!)
+-- * Semantics of StackLang (now!)
 --
 
 
 -- 6. Identify/define a semantics domain for Cmd and for Prog.
 
+-- Concepts that we need for our semantics
+--  * We need a Stack with these kinds of elements
+--    * Int
+--    * Bool
+--  * Our stack will change as we execute commands
+--    * Only things commands do is change the stack: Stack -> Stack
+--  * Errors:
+--    * type errors
+--    * not enough things on the stack
+
+type Stack = [Either Bool Int]
+
+type Domain = Stack -> Maybe Stack
 
 -- 7. Define the semantics of a StackLang command (ignore if-else at first).
-cmd = undefined
+cmd :: Cmd -> Stack -> Maybe Stack
+cmd (PushI i)    s                       = Just (Right i : s)
+cmd (PushB b)    s                       = Just (Left b : s)
+cmd Add          (Right i : Right j : s) = Just (Right (i + j) : s)
+cmd Mul          (Right i : Right j : s) = Just (Right (i * j) : s)
+cmd LEq          (Right i : Right j : s) = Just (Left (j <= i) : s)
+cmd (IfElse t _) (Left True : s)         = prog t s
+cmd (IfElse _ e) (Left False : s)        = prog e s
+cmd _            _                       = Nothing
 
 
 -- 8. Define the semantics of a StackLang program.
-prog = undefined
+prog :: Prog -> Stack -> Maybe Stack
+prog []     s = Just s
+prog (c:cs) s = case cmd c s of
+                  Just s' -> prog cs s'
+                  Nothing -> Nothing
 
 
 -- | Run a program on an initially empty stack.
