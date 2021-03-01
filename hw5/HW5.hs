@@ -90,6 +90,7 @@ check (Program defs main) =
 --
 checkExpr :: [Var] -> Expr -> Bool
 checkExpr _ (Lit _)      = True
+checkExpr _ (Color _)    = True
 checkExpr vars (Ref v)   = elem v vars
 checkExpr vars (Add l r) = checkExpr vars l && checkExpr vars r
 checkExpr vars (Mul l r) = checkExpr vars l && checkExpr vars r
@@ -153,6 +154,7 @@ checkExpr vars (Mul l r) = checkExpr vars l && checkExpr vars r
 --
 checkCmd :: Map Macro Int -> [Var] -> Cmd -> Bool
 checkCmd macros vars (Pen _)                                                                                                                   = True
+checkCmd macros vars (SetColor _)                                                                                                              = True
 checkCmd macros vars (Move x y)                                                                                                                = checkExpr vars x && checkExpr vars y
 checkCmd macros vars (Call m a) | get m macros == Just (length a) && all (checkExpr vars) a                                                    = True
 checkCmd macros vars (For v start stop b) | checkExpr (vars ++ [v]) start && checkExpr (vars ++ [v]) stop && checkBlock macros (vars ++ [v]) b = True
@@ -219,11 +221,11 @@ checkDef macros (Define m p b) = checkBlock (set m (length p) macros) p b
 
 -- | The state of the pen, which includes whether it is up or down and its
 --   current location.
-type State = (Mode, Point)
+type State = (Mode, Point, Expr) -- Expr==Color
 
 -- | The initial state of the pen.
 initPen :: State
-initPen = (Up, (0,0))
+initPen = (Up, (0,0), Color 0xff0000)
 
 
 -- | Run a MiniLogo program by:
@@ -295,6 +297,7 @@ draw p | check p   = toHTML (prog p)
 --
 expr :: Env -> Expr -> Int
 expr _ (Lit i)     = i
+expr _ (Color i)   = i
 expr env (Ref v)   = getOrFail v env
 expr env (Add l r) = expr env l + expr env r
 expr env (Mul l r) = expr env l * expr env r
@@ -307,42 +310,47 @@ expr env (Mul l r) = expr env l * expr env r
 --   >>> let Define _ ps b = line
 --   >>> let ms = [("m1",([],[])),("line",(ps,b)),("m2",([],[]))]
 --   
---   >>> cmd [] [] (Up,(2,3)) (Pen Down)
---   ((Down,(2,3)),[])
+--   >>> cmd [] [] (Up,(2,3),Color 0xff0000) (Pen Down)
+--   ((Down,(2,3),Color 16711680),[])
 --
---   >>> cmd [] [] (Down,(2,3)) (Pen Up)
---   ((Up,(2,3)),[])
+--   >>> cmd [] [] (Down,(2,3),Color 0xff0000) (Pen Up)
+--   ((Up,(2,3),Color 16711680),[])
 --
---   >>> cmd [] vs (Up,(2,3)) (Move (Ref "y") (Add (Ref "x") (Lit 2)))
---   ((Up,(4,5)),[])
+--   >>> cmd [] [] (Down,(2,3),Color 0xff0000) (SetColor (Color 0x0000ff))
+--   ((Down,(2,3),Color 255),[])
 --
---   >>> cmd [] vs (Down,(2,3)) (Move (Ref "y") (Add (Ref "x") (Lit 2)))
---   ((Down,(4,5)),[((2,3),(4,5))])
+--   >>> cmd [] vs (Up,(2,3),Color 0xff0000) (Move (Ref "y") (Add (Ref "x") (Lit 2)))
+--   ((Up,(4,5),Color 16711680),[])
 --
---   >>> cmd ms vs (Up,(0,0)) (Call "m1" [])
---   ((Up,(0,0)),[])
+--   >>> cmd [] vs (Down,(2,3),Color 0xff0000) (Move (Ref "y") (Add (Ref "x") (Lit 2)))
+--   ((Down,(4,5),Color 16711680),[((2,3),(4,5),16711680)])
 --
---   >>> cmd ms vs (Down,(0,0)) (Call "line" [Ref "x", Ref "y", Add (Ref "x") (Lit 2), Add (Ref "y") (Lit 3)])
---   ((Down,(5,7)),[((3,4),(5,7))])
+--   >>> cmd ms vs (Up,(0,0),Color 0xff0000) (Call "m1" [])
+--   ((Up,(0,0),Color 16711680),[])
 --
---   >>> cmd [] vs (Down,(0,0)) (For "i" (Lit 1) (Ref "x") [])
---   ((Down,(0,0)),[])
+--   >>> cmd ms vs (Down,(0,0),Color 0xff0000) (Call "line" [Ref "x", Ref "y", Add (Ref "x") (Lit 2), Add (Ref "y") (Lit 3), Color 0xff0000])
+--   ((Down,(5,7),Color 16711680),[((3,4),(5,7),16711680)])
 --
---   >>> cmd ms vs (Down,(0,0)) (For "i" (Lit 1) (Ref "y") [Move (Ref "i") (Ref "i")])
---   ((Down,(4,4)),[((0,0),(1,1)),((1,1),(2,2)),((2,2),(3,3)),((3,3),(4,4))])
+--   >>> cmd [] vs (Down,(0,0),Color 0xff0000) (For "i" (Lit 1) (Ref "x") [])
+--   ((Down,(0,0),Color 16711680),[])
 --
---   >>> cmd ms vs (Down,(0,0)) (For "i" (Ref "x") (Lit 1) [Call "line" [Ref "i", Ref "i", Mul (Ref "x") (Ref "i"), Mul (Ref "y") (Ref "i")]])
---   ((Down,(3,4)),[((3,3),(9,12)),((2,2),(6,8)),((1,1),(3,4))])
+--   >>> cmd ms vs (Down,(0,0),Color 0xff0000) (For "i" (Lit 1) (Ref "y") [Move (Ref "i") (Ref "i")])
+--   ((Down,(4,4),Color 16711680),[((0,0),(1,1),16711680),((1,1),(2,2),16711680),((2,2),(3,3),16711680),((3,3),(4,4),16711680)])
+--
+--   >>> cmd ms vs (Down,(0,0),Color 0xff0000) (For "i" (Ref "x") (Lit 1) [Call "line" [Ref "i", Ref "i", Mul (Ref "x") (Ref "i"), Mul (Ref "y") (Ref "i")]])
+--   ((Down,(3,4),Color 16711680),[((3,3),(9,12),16711680),((2,2),(6,8),16711680),((1,1),(3,4),16711680)])
 --
 cmd :: Macros -> Env -> State -> Cmd -> (State, [Line])
-cmd defs env state@(pen,pos) c = case c of
+cmd defs env state@(pen,pos,color) c = case c of
 
-    Pen Up   -> ((Up, pos), [])
-    Pen Down -> ((Down, pos), [])
+    Pen Up   -> ((Up, pos, color), [])
+    Pen Down -> ((Down, pos, color), [])
+
+    SetColor color' -> ((pen, pos, color'), [])
 
     Move xExp yExp -> case pen of
-                         Up   -> ((pen, (expr env xExp, expr env yExp)), [])
-                         Down -> ((pen, (expr env xExp, expr env yExp)), [(pos, (expr env xExp, expr env yExp))])
+                         Up   -> ((pen, (expr env xExp, expr env yExp), color), [])
+                         Down -> ((pen, (expr env xExp, expr env yExp), color), [(pos, (expr env xExp, expr env yExp), expr env color)])
 
     Call macro args ->
 
@@ -352,9 +360,10 @@ cmd defs env state@(pen,pos) c = case c of
           -- and evaluates/adds them to the program environment
           extendEnv :: Env -> [(Var, Expr)] -> Map Var Int
           extendEnv _ []           = []
+          --extendEnv env ((_, Color _):t) = extendEnv env t
           extendEnv env ((v, e):t) = (v, expr env e) : extendEnv env t
     
-      in block defs (env ++ extendEnv env (zip ps args)) (pen,pos) c'
+      in block defs (env ++ extendEnv env (zip ps args)) (pen,pos,color) c'
 
     For v fromExp toExp body ->
 
@@ -376,14 +385,14 @@ cmd defs env state@(pen,pos) c = case c of
 
 -- | Semantics of blocks.
 --
---   >>> block [] [] (Down,(0,0)) []
---   ((Down,(0,0)),[])
+--   >>> block [] [] (Down,(0,0),Color 0xff0000) []
+--   ((Down,(0,0),Color 16711680),[])
 --
---   >>> block [] [] (Down,(0,0)) [Pen Down, Pen Up, Pen Up, Move (Lit 2) (Lit 3)]
---   ((Up,(2,3)),[])
+--   >>> block [] [] (Down,(0,0),Color 0xff0000) [Pen Down, Pen Up, Pen Up, Move (Lit 2) (Lit 3)]
+--   ((Up,(2,3),Color 16711680),[])
 --
---   >>> block [] [] (Down,(0,0)) [Pen Up, Move (Lit 2) (Lit 3), Pen Down, Move (Lit 4) (Lit 5), Move (Lit 6) (Lit 7)]
---   ((Down,(6,7)),[((2,3),(4,5)),((4,5),(6,7))])
+--   >>> block [] [] (Down,(0,0),Color 0xff0000) [Pen Up, Move (Lit 2) (Lit 3), Pen Down, Move (Lit 4) (Lit 5), Move (Lit 6) (Lit 7)]
+--   ((Down,(6,7),Color 16711680),[((2,3),(4,5),16711680),((4,5),(6,7),16711680)])
 -- 
 block :: Macros -> Env -> State -> Block -> (State, [Line])
 block defs env state = go state []
