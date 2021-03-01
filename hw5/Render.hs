@@ -7,6 +7,7 @@
 module Render (Point,Line,toHTML,toGridHTML) where
 
 import Data.List (intercalate)
+import Text.Printf (printf)
 
 
 --
@@ -22,7 +23,7 @@ import Data.List (intercalate)
 type Point = (Int, Int)
 
 -- | A line is defined by its endpoints.
-type Line = (Point, Point)
+type Line = (Point, Point, Int)
 
 
 -- ** Drawing functions
@@ -55,8 +56,8 @@ gridStep = 5
 maxX = width `div` scale
 maxY = height `div` scale
 
-gridStyle = "fill:none;stroke:lightgrey;stroke-width:1"
-drawStyle = "fill:none;stroke:red;stroke-width:2;stroke-linecap:round"
+gridStyle = "fill:none;stroke:#%06X;stroke-width:1"
+drawStyle = "fill:none;stroke:#%06X;stroke-width:2;stroke-linecap:round"
 
 title  = "<head><title>MiniLogo Semantics Viewer</title></head>"
 view   = "<svg width='100%' viewBox='0 0 "
@@ -72,8 +73,8 @@ header = unlines ["<!DOCTYPE html>", "<html>", title, "<body>", view, border]
 footer = unlines ["</svg>","</body>","</html>"]
 
 grid = unlines (map (poly gridStyle) lines)
-  where lines = [ [(x,0), (x,maxY)] | x <- [0,gridStep..maxX] ]
-             ++ [ [(0,y), (maxX,y)] | y <- [0,gridStep..maxY] ]
+  where lines = [ ([(x,0), (x,maxY)], 0xD3D3D3) | x <- [0,gridStep..maxX] ]
+             ++ [ ([(0,y), (maxX,y)], 0xD3D3D3) | y <- [0,gridStep..maxY] ]
 
 content :: [Line] -> String
 content = unlines . map (poly drawStyle) . chunk
@@ -85,15 +86,15 @@ point (x,y) = show xp ++ "," ++ show yp
         yp = height - y*scale + margin
 
 -- | Chunk a bunch of lines into sequences of connected points.
-chunk :: [Line] -> [[Point]]
+chunk :: [Line] -> [([Point], Int)]
 chunk []         = []
-chunk [(p,q)]    = [[p,q]]
-chunk ((p,q):ls) | q == head ps = (p:ps) : pss
-                 | otherwise    = [p,q] : ps : pss
+chunk [(p,q,c)]    = [([p,q],c)]
+chunk ((p,q,c):ls) | (let (ps', _) = ps in q == head ps') = (let (ps', _) = ps in ((p:ps'),c) : pss)
+                 | otherwise    = ([p,q],c) : ps : pss
   where (ps:pss) = chunk ls
 
 -- | Draw a sequence of connected points.
-poly :: String -> [Point] -> String
-poly style ps = "<polyline points='"
+poly :: String -> ([Point], Int) -> String
+poly style (ps, c) = "<polyline points='"
              ++ intercalate " " (map point ps)
-             ++ "' style='" ++ style ++ "'/>"
+             ++ "' style='" ++ (printf style c) ++ "'/>"
