@@ -6,6 +6,7 @@
 module MiniLogo where
 
 import Data.List (intercalate)
+import Text.Printf (printf)
 
 
 --
@@ -35,13 +36,13 @@ data Mode = Down | Up
 -- | Different colors for the pend to draw
 --data Color = Red | Green | Blue | Yellow | Black
 --  deriving (Eq,Show)
-type Color = String
+--type Color = String
 
 -- | Expressions.
 data Expr
    = Ref Var
    | Lit Int
-   | Color Color
+   | Color Int -- Hex color code
    | Add Expr Expr
    | Mul Expr Expr
   deriving (Eq,Show)
@@ -128,7 +129,7 @@ prettyMode Up   = "up"
 prettyExpr :: Expr -> String
 prettyExpr (Ref x)   = x
 prettyExpr (Lit i)   = show i
-prettyExpr (Color c) = c
+prettyExpr (Color c) = printf "#%06X" c
 prettyExpr (Add l r) = prettyExpr l ++ " + " ++ prettyExpr r
 prettyExpr (Mul l r) = prettyHelp l ++ " * " ++ prettyHelp r
   where
@@ -169,18 +170,16 @@ pretty (Program ds b) =
 -- | A macro that draws a line between two points (x1,y1) and (x2,y2).
 --
 --   >>> putStrLn (prettyDef line)
---   line(x1, y1, x2, y2, c) {
+--   line(x1, y1, x2, y2) {
 --     pen up;
---     color(c);
 --     move(x1, y1);
 --     pen down;
 --     move(x2, y2)
 --   }
 --
 line :: Def
-line = Define "line" ["x1","y1","x2","y2","c"]
+line = Define "line" ["x1","y1","x2","y2"]
     [ Pen Up
-    , SetColor (Color "c")
     , Move (Ref "x1") (Ref "y1")
     , Pen Down
     , Move (Ref "x2") (Ref "y2")
@@ -191,9 +190,8 @@ line = Define "line" ["x1","y1","x2","y2","c"]
 --   is at (x,y).
 --
 --   >>> putStrLn (prettyDef box)
---   box(x, y, w, h, c) {
+--   box(x, y, w, h) {
 --     pen up;
---     color(c);
 --     move(x, y);
 --     pen down;
 --     move(x + w, y);
@@ -203,9 +201,8 @@ line = Define "line" ["x1","y1","x2","y2","c"]
 --   }
 --
 box :: Def
-box = Define "box" ["x","y","w","h","c"]
+box = Define "box" ["x","y","w","h"]
     [ Pen Up
-    , SetColor (Color "c")
     , Move (Ref "x") (Ref "y")
     , Pen Down
     , Move (Add (Ref "x") (Ref "w")) (Ref "y")
@@ -219,32 +216,31 @@ box = Define "box" ["x","y","w","h","c"]
 --   indicated position.
 --   
 --   >>> putStrLn (prettyDef hi)
---   hi(x, y, c) {
---     line(x, y + 2, x, y, c);
---     line(x + 1, y + 2, x + 1, y, c);
---     line(x, y + 1, x + 1, y + 1, c);
---     line(x + 2, y + 2, x + 2, y, c)
+--   hi(x, y) {
+--     line(x, y + 2, x, y);
+--     line(x + 1, y + 2, x + 1, y);
+--     line(x, y + 1, x + 1, y + 1);
+--     line(x + 2, y + 2, x + 2, y)
 --   }
 --
 hi :: Def
-hi = Define "hi" ["x","y","c"]
+hi = Define "hi" ["x","y"]
    [ Call "line" [ Ref "x", Add (Ref "y") (Lit 2)
-                 , Ref "x", Ref "y", Color "c" ]
+                 , Ref "x", Ref "y" ]
    , Call "line" [ Add (Ref "x") (Lit 1), Add (Ref "y") (Lit 2)
-                 , Add (Ref "x") (Lit 1), Ref "y", Color "c" ]
+                 , Add (Ref "x") (Lit 1), Ref "y" ]
    , Call "line" [ Ref "x", Add (Ref "y") (Lit 1)
-                 , Add (Ref "x") (Lit 1), Add (Ref "y") (Lit 1), Color "c" ]
+                 , Add (Ref "x") (Lit 1), Add (Ref "y") (Lit 1) ]
    , Call "line" [ Add (Ref "x") (Lit 2), Add (Ref "y") (Lit 2)
-                 , Add (Ref "x") (Lit 2), Ref "y", Color "c" ]
+                 , Add (Ref "x") (Lit 2), Ref "y" ]
    ]
 
 
 -- | A macro that draws n steps starting from point (x,y).
 -- 
 --   >>> putStrLn (prettyDef steps)
---   steps(n, x, y, c) {
+--   steps(n, x, y) {
 --     pen up;
---     color(c);
 --     move(x, y);
 --     pen down;
 --     for i = 0 to n + -1 {
@@ -254,9 +250,8 @@ hi = Define "hi" ["x","y","c"]
 --   }
 --
 steps :: Def
-steps = Define "steps" ["n","x","y","c"]
+steps = Define "steps" ["n","x","y"]
     [ Pen Up
-    , SetColor (Color "c")
     , Move (Ref "x") (Ref "y")
     , Pen Down
     , For "i" (Lit 0) (Add (Ref "n") (Lit (-1)))
@@ -271,26 +266,25 @@ steps = Define "steps" ["n","x","y","c"]
 -- | A macro that draws an X inside a box.
 -- 
 --   >>> putStrLn (prettyDef xbox)
---   xbox(x, y, w, h, c) {
---     box(x, y, w, h, c);
---     line(x, y, x + w, y + h, c);
---     line(x, y + h, x + w, y, c)
+--   xbox(x, y, w, h) {
+--     box(x, y, w, h);
+--     line(x, y, x + w, y + h);
+--     line(x, y + h, x + w, y)
 --   }
 --
 xbox :: Def
-xbox = Define "xbox" ["x","y","w","h","c"]
-    [ Call "box" [Ref "x", Ref "y", Ref "w", Ref "h", Color "c"]
-    , Call "line" [Ref "x", Ref "y", Add (Ref "x") (Ref "w"), Add (Ref "y") (Ref "h"), Color "c"]
-    , Call "line" [Ref "x", Add (Ref "y") (Ref "h"), Add (Ref "x") (Ref "w"), Ref "y", Color "c"]
+xbox = Define "xbox" ["x","y","w","h"]
+    [ Call "box" [Ref "x", Ref "y", Ref "w", Ref "h"]
+    , Call "line" [Ref "x", Ref "y", Add (Ref "x") (Ref "w"), Add (Ref "y") (Ref "h")]
+    , Call "line" [Ref "x", Add (Ref "y") (Ref "h"), Add (Ref "x") (Ref "w"), Ref "y"]
     ]
 
 
 -- | Generate a program that draws n boxes, growing up and to the right.
 --
 --   >>> putStrLn (pretty (boxes 15))
---   box(x, y, w, h, c) {
+--   box(x, y, w, h) {
 --     pen up;
---     color(c);
 --     move(x, y);
 --     pen down;
 --     move(x + w, y);
@@ -300,14 +294,14 @@ xbox = Define "xbox" ["x","y","w","h","c"]
 --   }
 --   main() {
 --     for i = 1 to 15 {
---       box(i, i, i, i, red)
+--       box(i, i, i, i)
 --     }
 --   }
 --
 boxes :: Int -> Prog
 boxes n = Program [box]
     [ For "i" (Lit 1) (Lit n)
-      [ Call "box" [Ref "i", Ref "i", Ref "i", Ref "i", Color "red"] ]
+      [ Call "box" [Ref "i", Ref "i", Ref "i", Ref "i"] ]
     ]
 
 
@@ -316,16 +310,14 @@ boxes n = Program [box]
 --   sponsored by Microsoft.)
 --   
 --   >>> putStrLn (pretty (xboxes 5 3))
---   line(x1, y1, x2, y2, c) {
+--   line(x1, y1, x2, y2) {
 --     pen up;
---     color(c);
 --     move(x1, y1);
 --     pen down;
 --     move(x2, y2)
 --   }
---   box(x, y, w, h, c) {
+--   box(x, y, w, h) {
 --     pen up;
---     color(c);
 --     move(x, y);
 --     pen down;
 --     move(x + w, y);
@@ -333,33 +325,33 @@ boxes n = Program [box]
 --     move(x, y + h);
 --     move(x, y)
 --   }
---   xbox(x, y, w, h, c) {
---     box(x, y, w, h, c);
---     line(x, y, x + w, y + h, c);
---     line(x, y + h, x + w, y, c)
+--   xbox(x, y, w, h) {
+--     box(x, y, w, h);
+--     line(x, y, x + w, y + h);
+--     line(x, y + h, x + w, y)
 --   }
 --   main() {
 --     for i = 0 to 4 {
---       xbox(i * 4 + 1, 1, 3, 3, red)
+--       xbox(i * 4 + 1, 1, 3, 3)
 --     }
 --   }
 --
 xboxes :: Int -> Int -> Prog
 xboxes n s = Program [line,box,xbox]
    [ For "i" (Lit 0) (Lit (n-1))
-     [ Call "xbox" [Add (Mul (Ref "i") (Lit (s+1))) (Lit 1), Lit 1, Lit s, Lit s, Color "red"] ]
+     [ Call "xbox" [Add (Mul (Ref "i") (Lit (s+1))) (Lit 1), Lit 1, Lit s, Lit s] ]
    ]
 
 
 -- | A MiniMini logo program with a lot going on.
 shebang :: Prog
 shebang = Program [line,hi,box,xbox,steps]
-    [ Call "hi" [Lit 39, Lit 20, Color "red"]
-    , Call "box" [Lit 36, Lit 17, Lit 8, Lit 8, Color "red"]
-    , Call "steps" [Lit 36, Lit 2, Lit 2, Color "red"]
-    , Call "steps" [Lit 18, Lit 2, Lit 20, Color "red"]
-    , Call "steps" [Lit 36, Lit 40, Lit 2, Color "red"]
-    , Call "steps" [Lit 18, Lit 60, Lit 2, Color "red"]
-    , Call "xbox" [Lit 25, Lit 8, Lit 3, Lit 3, Color "red"]
-    , Call "xbox" [Lit 52, Lit 31, Lit 3, Lit 3, Color "red"]
+    [ Call "hi" [Lit 39, Lit 20]
+    , Call "box" [Lit 36, Lit 17, Lit 8, Lit 8]
+    , Call "steps" [Lit 36, Lit 2, Lit 2]
+    , Call "steps" [Lit 18, Lit 2, Lit 20]
+    , Call "steps" [Lit 36, Lit 40, Lit 2]
+    , Call "steps" [Lit 18, Lit 60, Lit 2]
+    , Call "xbox" [Lit 25, Lit 8, Lit 3, Lit 3]
+    , Call "xbox" [Lit 52, Lit 31, Lit 3, Lit 3]
     ]
