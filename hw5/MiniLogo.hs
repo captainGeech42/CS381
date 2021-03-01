@@ -33,11 +33,6 @@ type Block = [Cmd]
 data Mode = Down | Up
   deriving (Eq,Show)
 
--- | Different colors for the pend to draw
---data Color = Red | Green | Blue | Yellow | Black
---  deriving (Eq,Show)
---type Color = String
-
 -- | Expressions.
 data Expr
    = Ref Var
@@ -116,14 +111,6 @@ type Macros = Map Macro (Pars,Block)
 prettyMode :: Mode -> String
 prettyMode Down = "down"
 prettyMode Up   = "up"
-
--- | Pretty print a color
---prettyColor :: Color -> String
---prettyColor Red    = "red"
---prettyColor Green  = "green"
---prettyColor Blue   = "blue"
---prettyColor Yellow = "yellow"
---prettyColor Black  = "black"
 
 -- | Pretty print an expression.
 prettyExpr :: Expr -> String
@@ -346,6 +333,19 @@ xboxes n s = Program [line,box,xbox]
 -- | A MiniMini logo program with a lot going on.
 shebang :: Prog
 shebang = Program [line,hi,box,xbox,steps]
+    [ Call "hi" [Lit 39, Lit 20]
+    , Call "box" [Lit 36, Lit 17, Lit 8, Lit 8]
+    , Call "steps" [Lit 36, Lit 2, Lit 2]
+    , Call "steps" [Lit 18, Lit 2, Lit 20]
+    , Call "steps" [Lit 36, Lit 40, Lit 2]
+    , Call "steps" [Lit 18, Lit 60, Lit 2]
+    , Call "xbox" [Lit 25, Lit 8, Lit 3, Lit 3]
+    , Call "xbox" [Lit 52, Lit 31, Lit 3, Lit 3]
+    ]
+
+-- | A MiniMini logo program with a lot going on, IN COLOR.
+shebangColor :: Prog
+shebangColor = Program [line,hi,box,xbox,steps]
     [ Call "hi" [Lit 39, Lit 20]
     , SetColor (Color 0x0000ff)
     , Call "box" [Lit 36, Lit 17, Lit 8, Lit 8]

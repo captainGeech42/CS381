@@ -19,7 +19,7 @@
 --  * Render.hs -- Defines the Point and Line types used in the semantics, plus
 --    code for rendering the semantics of MiniLogo programs in HTML5.
 --
-module HW5 where
+module HW5 (draw) where
 
 import MiniLogo
 import Render
@@ -360,7 +360,6 @@ cmd defs env state@(pen,pos,color) c = case c of
           -- and evaluates/adds them to the program environment
           extendEnv :: Env -> [(Var, Expr)] -> Map Var Int
           extendEnv _ []           = []
-          --extendEnv env ((_, Color _):t) = extendEnv env t
           extendEnv env ((v, e):t) = (v, expr env e) : extendEnv env t
     
       in block defs (env ++ extendEnv env (zip ps args)) (pen,pos,color) c'
