@@ -93,6 +93,7 @@ checkExpr _ (Lit _)      = True
 checkExpr _ (Color _)    = True
 checkExpr vars (Ref v)   = elem v vars
 checkExpr vars (Add l r) = checkExpr vars l && checkExpr vars r
+checkExpr vars (Sub l r) = checkExpr vars l && checkExpr vars r
 checkExpr vars (Mul l r) = checkExpr vars l && checkExpr vars r
 checkExpr vars (Div l r) = checkExpr vars l && checkExpr vars r
 
@@ -299,11 +300,15 @@ draw p | check p   = toHTML (prog p)
 --   >>> expr env (Div (Lit 6) (Lit 3))
 --   2
 --
+--   >>> expr env (Sub (Lit 6) (Lit 3))
+--   3
+--
 expr :: Env -> Expr -> Int
 expr _ (Lit i)     = i
 expr _ (Color i)   = i
 expr env (Ref v)   = getOrFail v env
 expr env (Add l r) = expr env l + expr env r
+expr env (Sub l r) = expr env l - expr env r
 expr env (Mul l r) = expr env l * expr env r
 expr env (Div l r) = expr env l `div` expr env r
 
