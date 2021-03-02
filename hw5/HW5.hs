@@ -425,6 +425,7 @@ prog (Program defs main) = snd $ block (map entry defs) [] initPen main
 -- Custom functionality I implemented:
 --  * Support for custom colors
 --  * Division and subtraction operations
+--  * Changed the scale factor in Render.hs to 1, and updated MiniLogo.hs to accurately draw shebang
 --
 
 filledBox :: Def
@@ -463,7 +464,6 @@ amazing = Program [line, box, filledBox]
     , Call "line" [Lit 33, Lit 21, Lit 35, Lit 0]
 
     , SetColor (Color 0xed9e1f)
-    ,
     ]
 
 main = do draw amazing

@@ -211,22 +211,22 @@ box = Define "box" ["x","y","w","h"]
 --   
 --   >>> putStrLn (prettyDef hi)
 --   hi(x, y) {
---     line(x, y + 2, x, y);
---     line(x + 1, y + 2, x + 1, y);
---     line(x, y + 1, x + 1, y + 1);
---     line(x + 2, y + 2, x + 2, y)
+--     line(x, y + 20, x, y);
+--     line(x + 10, y + 20, x + 10, y);
+--     line(x, y + 10, x + 10, y + 10);
+--     line(x + 20, y + 20, x + 20, y)
 --   }
 --
 hi :: Def
 hi = Define "hi" ["x","y"]
-   [ Call "line" [ Ref "x", Add (Ref "y") (Lit 2)
+   [ Call "line" [ Ref "x", Add (Ref "y") (Lit 20)
                  , Ref "x", Ref "y" ]
-   , Call "line" [ Add (Ref "x") (Lit 1), Add (Ref "y") (Lit 2)
-                 , Add (Ref "x") (Lit 1), Ref "y" ]
-   , Call "line" [ Ref "x", Add (Ref "y") (Lit 1)
-                 , Add (Ref "x") (Lit 1), Add (Ref "y") (Lit 1) ]
-   , Call "line" [ Add (Ref "x") (Lit 2), Add (Ref "y") (Lit 2)
-                 , Add (Ref "x") (Lit 2), Ref "y" ]
+   , Call "line" [ Add (Ref "x") (Lit 10), Add (Ref "y") (Lit 20)
+                 , Add (Ref "x") (Lit 10), Ref "y" ]
+   , Call "line" [ Ref "x", Add (Ref "y") (Lit 10)
+                 , Add (Ref "x") (Lit 10), Add (Ref "y") (Lit 10) ]
+   , Call "line" [ Add (Ref "x") (Lit 20), Add (Ref "y") (Lit 20)
+                 , Add (Ref "x") (Lit 20), Ref "y" ]
    ]
 
 
@@ -237,9 +237,9 @@ hi = Define "hi" ["x","y"]
 --     pen up;
 --     move(x, y);
 --     pen down;
---     for i = 0 to n + -1 {
---       move(x + i, y + i + 1);
---       move(x + i + 1, y + i + 1)
+--     for i = 0 to n - 1 {
+--       move(x + i * 10, y + i * 10 + 10);
+--       move(x + i * 10 + 10, y + i * 10 + 10)
 --     }
 --   }
 --
@@ -248,11 +248,11 @@ steps = Define "steps" ["n","x","y"]
     [ Pen Up
     , Move (Ref "x") (Ref "y")
     , Pen Down
-    , For "i" (Lit 0) (Add (Ref "n") (Lit (-1)))
-      [ Move (Add (Ref "x") (Ref "i"))
-             (Add (Add (Ref "y") (Ref "i")) (Lit 1))
-      , Move (Add (Add (Ref "x") (Ref "i")) (Lit 1))
-             (Add (Add (Ref "y") (Ref "i")) (Lit 1))
+    , For "i" (Lit 0) (Sub (Ref "n") (Lit 1))
+      [ Move (Add (Ref "x") (Mul (Ref "i") (Lit 10)))
+             (Add (Add (Ref "y") (Mul (Ref "i") (Lit 10))) (Lit 10))
+      , Move (Add (Add (Ref "x") (Mul (Ref "i") (Lit 10))) (Lit 10))
+             (Add (Add (Ref "y") (Mul (Ref "i") (Lit 10))) (Lit 10))
       ]
     ]
 
@@ -340,14 +340,14 @@ xboxes n s = Program [line,box,xbox]
 -- | A MiniMini logo program with a lot going on.
 shebang :: Prog
 shebang = Program [line,hi,box,xbox,steps]
-    [ Call "hi" [Lit 39, Lit 20]
-    , Call "box" [Lit 36, Lit 17, Lit 8, Lit 8]
-    , Call "steps" [Lit 36, Lit 2, Lit 2]
-    , Call "steps" [Lit 18, Lit 2, Lit 20]
-    , Call "steps" [Lit 36, Lit 40, Lit 2]
-    , Call "steps" [Lit 18, Lit 60, Lit 2]
-    , Call "xbox" [Lit 25, Lit 8, Lit 3, Lit 3]
-    , Call "xbox" [Lit 52, Lit 31, Lit 3, Lit 3]
+    [ Call "hi" [Lit 390, Lit 200]
+    , Call "box" [Lit 360, Lit 170, Lit 80, Lit 80]
+    , Call "steps" [Lit 36, Lit 20, Lit 20]
+    , Call "steps" [Lit 18, Lit 20, Lit 200]
+    , Call "steps" [Lit 36, Lit 400, Lit 20]
+    , Call "steps" [Lit 18, Lit 600, Lit 20]
+    , Call "xbox" [Lit 250, Lit 80, Lit 30, Lit 30]
+    , Call "xbox" [Lit 520, Lit 310, Lit 30, Lit 30]
     ]
 
 -- | A MiniMini logo program with a lot going on, IN COLOR.
