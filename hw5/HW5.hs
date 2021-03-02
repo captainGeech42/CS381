@@ -430,40 +430,73 @@ prog (Program defs main) = snd $ block (map entry defs) [] initPen main
 
 filledBox :: Def
 filledBox = Define "filledBox" ["x","y","w","h"]
-    [ For "i" (Lit 0) (Div (Ref "w") (Lit 2))
-      [ Call "box" [Add (Ref "i") (Ref "x"), Add (Ref "i") (Ref "y"), Sub (Add (Ref "x") (Ref "w")) (Ref "i"), Sub (Add (Ref "y") (Ref "h")) (Ref "i")] ]
+    [ Call "box" [Ref "x", Ref "y", Ref "w", Ref "h"]
+    , For "i" (Lit 0) (Ref "w")
+      [ Pen Up
+      , Move (Add (Ref "x") (Ref "i")) (Ref "y")
+      , Pen Down
+      , Move (Add (Ref "x") (Ref "i")) (Add (Ref "y") (Ref "h"))
+      ]
     ]
 
 -- | A MiniLogo program that draws your amazing picture.
 amazing :: Prog
 amazing = Program [line, box, filledBox]
-    [ SetColor (Color 0x000000)
+    [ SetColor (Color 0xfad61d)
+    , Call "filledBox" [Lit 150, Lit 0, Lit 200, Lit 310]
+
+    , SetColor (Color 0x000000)
     -- left edge
-    , Call "line" [Lit 15, Lit 0, Lit 16, Lit 3]
-    , Call "line" [Lit 16, Lit 3, Lit 14, Lit 10]
-    , Call "line" [Lit 14, Lit 10, Lit 18, Lit 22]
+    , Call "line" [Lit 150, Lit 0, Lit 160, Lit 30]
+    , Call "line" [Lit 160, Lit 30, Lit 140, Lit 100]
+    , Call "line" [Lit 140, Lit 100, Lit 180, Lit 220]
 
     -- start of left ear
-    , Call "line" [Lit 18, Lit 22, Lit 19, Lit 23]
-    , Call "line" [Lit 18, Lit 22, Lit 13, Lit 30]
+    , Call "line" [Lit 180, Lit 220, Lit 190, Lit 230]
+    , Call "line" [Lit 180, Lit 220, Lit 130, Lit 300]
 
     -- down left ear
-    , Call "line" [Lit 13, Lit 30, Lit 23, Lit 25]
+    , Call "line" [Lit 130, Lit 300, Lit 230, Lit 250]
 
     -- connector
-    , Call "line" [Lit 23, Lit 25, Lit 30, Lit 25]
+    , Call "line" [Lit 230, Lit 250, Lit 300, Lit 250]
 
     -- right ear
-    , Call "line" [Lit 30, Lit 25, Lit 40, Lit 28]
-    , Call "line" [Lit 40, Lit 28, Lit 33, Lit 21]
+    , Call "line" [Lit 300, Lit 250, Lit 400, Lit 280]
+    , Call "line" [Lit 400, Lit 280, Lit 330, Lit 210]
     
     -- little notch up thingy
-    , Call "line" [Lit 33, Lit 21, Lit 32, Lit 22]
+    , Call "line" [Lit 330, Lit 210, Lit 320, Lit 220]
 
     -- right edge
-    , Call "line" [Lit 33, Lit 21, Lit 35, Lit 0]
+    , Call "line" [Lit 330, Lit 210, Lit 350, Lit 0]
 
-    , SetColor (Color 0xed9e1f)
+    -- cheeks
+    , SetColor (Color 0xc26915)
+    , Call "filledBox" [Lit 160, Lit 85, Lit 35, Lit 25]
+    , Call "filledBox" [Lit 290, Lit 85, Lit 35, Lit 25]
+    
+    -- mouth
+    , SetColor (Color 0xff5e5e)
+    , Call "filledBox" [Lit 215, Lit 70, Lit 35, Lit 25]
+    , SetColor (Color 0x6e2222)
+    , Call "box" [Lit 215, Lit 70, Lit 35, Lit 25]
+
+    -- left eye
+    , SetColor (Color 0x61331e)
+    , Call "filledBox" [Lit 200, Lit 140, Lit 20, Lit 25]
+    , SetColor (Color 0xffffff)
+    , Call "filledBox" [Lit 202, Lit 154, Lit 6, Lit 9]
+    
+    -- right eye
+    , SetColor (Color 0x61331e)
+    , Call "filledBox" [Lit 260, Lit 140, Lit 20, Lit 25]
+    , SetColor (Color 0xffffff)
+    , Call "filledBox" [Lit 262, Lit 154, Lit 6, Lit 9]
+
+    -- nose
+    , SetColor (Color 0x61331e)
+    , Call "filledBox" [Lit 235, Lit 120, Lit 8, Lit 4]
     ]
 
 main = do draw amazing
