@@ -421,19 +421,21 @@ prog (Program defs main) = snd $ block (map entry defs) [] initPen main
 
 --
 -- * Amazing picture (extra credit)
+--
 -- Custom functionality I implemented:
 --  * Support for custom colors
---  * Division operations
+--  * Division and subtraction operations
 --
 
 filledBox :: Def
 filledBox = Define "filledBox" ["x","y","w","h"]
-    [ 
+    [ For "i" (Lit 0) (Div (Ref "w") (Lit 2))
+      [ Call "box" [Add (Ref "i") (Ref "x"), Add (Ref "i") (Ref "y"), Sub (Add (Ref "x") (Ref "w")) (Ref "i"), Sub (Add (Ref "y") (Ref "h")) (Ref "i")] ]
     ]
 
 -- | A MiniLogo program that draws your amazing picture.
 amazing :: Prog
-amazing = Program [line]
+amazing = Program [line, box, filledBox]
     [ SetColor (Color 0x000000)
     -- left edge
     , Call "line" [Lit 15, Lit 0, Lit 16, Lit 3]
@@ -459,6 +461,9 @@ amazing = Program [line]
 
     -- right edge
     , Call "line" [Lit 33, Lit 21, Lit 35, Lit 0]
+
+    , SetColor (Color 0xed9e1f)
+    ,
     ]
 
 main = do draw amazing
