@@ -349,23 +349,3 @@ shebang = Program [line,hi,box,xbox,steps]
     , Call "xbox" [Lit 250, Lit 80, Lit 30, Lit 30]
     , Call "xbox" [Lit 520, Lit 310, Lit 30, Lit 30]
     ]
-
--- | A MiniMini logo program with a lot going on, IN COLOR.
-shebangColor :: Prog
-shebangColor = Program [line,hi,box,xbox,steps]
-    [ Call "hi" [Lit 39, Lit 20]
-    , SetColor (Color 0x0000ff)
-    , Call "box" [Lit 36, Lit 17, Lit 8, Lit 8]
-    , SetColor (Color 0x00ff00)
-    , Call "steps" [Lit 36, Lit 2, Lit 2]
-    , SetColor (Color 0xff0000)
-    , Call "steps" [Lit 18, Lit 2, Lit 20]
-    , SetColor (Color 0x0000ff)
-    , Call "steps" [Lit 36, Lit 40, Lit 2]
-    , SetColor (Color 0x00ff00)
-    , Call "steps" [Lit 18, Lit 60, Lit 2]
-    , SetColor (Color 0xff0000)
-    , Call "xbox" [Lit 25, Lit 8, Lit 3, Lit 3]
-    , SetColor (Color 0x0000ff)
-    , Call "xbox" [Lit 52, Lit 31, Lit 3, Lit 3]
-    ]

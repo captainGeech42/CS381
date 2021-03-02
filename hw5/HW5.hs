@@ -19,7 +19,7 @@
 --  * Render.hs -- Defines the Point and Line types used in the semantics, plus
 --    code for rendering the semantics of MiniLogo programs in HTML5.
 --
-module HW5 (draw, main) where
+module HW5 (draw) where
 
 import MiniLogo
 import Render
