@@ -40,6 +40,7 @@ data Expr
    | Color Int -- Hex color code
    | Add Expr Expr
    | Mul Expr Expr
+   | Div Expr Expr -- Integer division
   deriving (Eq,Show)
 
 -- | Commands.
@@ -119,6 +120,10 @@ prettyExpr (Lit i)   = show i
 prettyExpr (Color c) = printf "#%06X" c
 prettyExpr (Add l r) = prettyExpr l ++ " + " ++ prettyExpr r
 prettyExpr (Mul l r) = prettyHelp l ++ " * " ++ prettyHelp r
+  where
+    prettyHelp e@(Add _ _) = "(" ++ prettyExpr e ++ ")"
+    prettyHelp e           = prettyExpr e
+prettyExpr (Div l r) = prettyHelp l ++ " * " ++ prettyHelp r
   where
     prettyHelp e@(Add _ _) = "(" ++ prettyExpr e ++ ")"
     prettyHelp e           = prettyExpr e

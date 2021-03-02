@@ -19,7 +19,7 @@
 --  * Render.hs -- Defines the Point and Line types used in the semantics, plus
 --    code for rendering the semantics of MiniLogo programs in HTML5.
 --
-module HW5 (draw) where
+module HW5 (draw, main) where
 
 import MiniLogo
 import Render
@@ -94,6 +94,7 @@ checkExpr _ (Color _)    = True
 checkExpr vars (Ref v)   = elem v vars
 checkExpr vars (Add l r) = checkExpr vars l && checkExpr vars r
 checkExpr vars (Mul l r) = checkExpr vars l && checkExpr vars r
+checkExpr vars (Div l r) = checkExpr vars l && checkExpr vars r
 
 
 
@@ -295,12 +296,16 @@ draw p | check p   = toHTML (prog p)
 --   >>> expr env (Add (Mul (Ref "x") (Lit 5)) (Mul (Lit 6) (Ref "y")))
 --   39
 --
+--   >>> expr env (Div (Lit 6) (Lit 3))
+--   2
+--
 expr :: Env -> Expr -> Int
 expr _ (Lit i)     = i
 expr _ (Color i)   = i
 expr env (Ref v)   = getOrFail v env
 expr env (Add l r) = expr env l + expr env r
 expr env (Mul l r) = expr env l * expr env r
+expr env (Div l r) = expr env l `div` expr env r
 
 
 
@@ -411,8 +416,44 @@ prog (Program defs main) = snd $ block (map entry defs) [] initPen main
 
 --
 -- * Amazing picture (extra credit)
+-- Custom functionality I implemented:
+--  * Support for custom colors
+--  * Division operations
 --
+
+filledBox :: Def
+filledBox = Define "filledBox" ["x","y","w","h"]
+    [ 
+    ]
 
 -- | A MiniLogo program that draws your amazing picture.
 amazing :: Prog
-amazing = undefined
+amazing = Program [line]
+    [ SetColor (Color 0x000000)
+    -- left edge
+    , Call "line" [Lit 15, Lit 0, Lit 16, Lit 3]
+    , Call "line" [Lit 16, Lit 3, Lit 14, Lit 10]
+    , Call "line" [Lit 14, Lit 10, Lit 18, Lit 22]
+
+    -- start of left ear
+    , Call "line" [Lit 18, Lit 22, Lit 19, Lit 23]
+    , Call "line" [Lit 18, Lit 22, Lit 13, Lit 30]
+
+    -- down left ear
+    , Call "line" [Lit 13, Lit 30, Lit 23, Lit 25]
+
+    -- connector
+    , Call "line" [Lit 23, Lit 25, Lit 30, Lit 25]
+
+    -- right ear
+    , Call "line" [Lit 30, Lit 25, Lit 40, Lit 28]
+    , Call "line" [Lit 40, Lit 28, Lit 33, Lit 21]
+    
+    -- little notch up thingy
+    , Call "line" [Lit 33, Lit 21, Lit 32, Lit 22]
+
+    -- right edge
+    , Call "line" [Lit 33, Lit 21, Lit 35, Lit 0]
+    ]
+
+main = do draw amazing
