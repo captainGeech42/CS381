@@ -498,5 +498,3 @@ amazing = Program [line, box, filledBox]
     , SetColor (Color 0x61331e)
     , Call "filledBox" [Lit 235, Lit 120, Lit 8, Lit 4]
     ]
-
-main = do draw amazing
